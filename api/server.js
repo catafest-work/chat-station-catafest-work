@@ -60,6 +60,8 @@ const jwtSecret = "jwtSecret1234567890";
 const auth = require("./modules/auth");
 // include contact.js from modules folder 
 const contact = require("./modules/contact");
+// include chat.js from modules folder 
+const chat = require("./modules/chat");
 
 // strat the server at port 3000 (for local) or for hosting 
 http.listen(process.env.PORT || 3000, function(){
@@ -80,7 +82,10 @@ http.listen(process.env.PORT || 3000, function(){
     console.log("Database connected successfully");
     // use the api to database 
 
+    // init the contact feature
     contact.init(app,express);
+    // init chat features 
+    chat.init(app,express);
 
     app.post ("/logout", auth, async function (request, result) {
     const user = request.user;

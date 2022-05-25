@@ -13,6 +13,8 @@ import HomeComponent from './components/HomeComponent.vue'
 
 import AddContactComponent from './components/AddContactComponent.vue'
 
+import ChatComponent from "./components/ChatComponent.vue"
+
 // define some routes 
 // each route should map to a component 
 // components need to be added to the routes ...
@@ -21,6 +23,7 @@ const routes = [
   { path: '/login', component: LoginComponent },
   { path: '/', component: HomeComponent },
   { path: '/contacts/add', component: AddContactComponent },
+  { path: "/chat/:email", component: ChatComponent }
 ];
 
 // Create the router instance and pass the `routes` option 

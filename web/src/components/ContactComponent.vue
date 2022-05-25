@@ -23,6 +23,7 @@
           </td>
           <td v-text="contact.email"></td>
           <td style="display: flex;">
+            <router-link v-bind:to="'/chat/' + contact.email" class="btn btn-primary" style="margin-left: 10px;">Chat</router-link>
             <form v-on:submit.prevent="deleteContact">
               <input type="hidden" name="email" v-bind:value="contact.email" />
               <input type="submit" v-bind:value="isDeleting ? 'Deleting...' : 'Delete'" v-bind:isDeleting="disabled" class="btn btn-danger" />
