@@ -200,7 +200,7 @@ module.exports = {
       if(!fileSystem.existsSync("uploads/" + user.email)) {
         fileSystem.mkdirSync("uploads/" + user.email);
       }
-      const dateObj = new Date()
+      const dateObj = new Date();
       const datetimeStr = dateObj.getFullYear() + "-" + (dateObj.getMonth()+1) + "-"+
       dateObj.getDate() + "-" + dateObj.getHours()+ "-" +
       dateObj.getMinutes() + "-" + dateObj.getSeconds();
@@ -210,7 +210,7 @@ module.exports = {
         size: attachment.size,
         path: filePath,
         name: fileName,
-        displayName: attachment.displayName,
+        displayName: attachment.name,
         type: attachment.type
       };
       fileSystem.readFile(attachment.path, function 
@@ -218,7 +218,7 @@ module.exports = {
           if(error) {
             console.error(error);
           }
-        fileSystem.writeFile(attachment.path, data,
+        fileSystem.writeFile(filePath, data,
             function(error) {
               if(error) {
                 console.error(error);
