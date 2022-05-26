@@ -13,18 +13,41 @@
  
                   <div class="chat-about">
                     <!-- receiver name goes here -->
+                  <h6 class="m-b-0 text-white" 
+                  v-if="receiver != null" 
+                  v-text="receiver.name" 
+                  style="margin-bottom: 0px; position:0px; position: relative; top:10px;">
+                  </h6>
                   </div>
                 </div>
  
                 <div class="col-lg-6 hidden-sm text-right text-white">
                   <!-- attachment goes here -->
+                  <span v-if="attachment != null" 
+                    style="margin-right: 10px; position: relative; top: 7px;"
+                    v-text="attachment.name"></span>
+                    <a href="javascript:void(0);" 
+                    class="btn btn-outline-secondary pull-right text-white"
+                    v-on:click="selectFile">
+                    <i class="fa fa-paperclip"></i></a>
+                    <input type="file" id="attachment"
+                    style="display:none;" v-on:change="fileSelected" />
                 </div>
               </div>
             </div>
  
             <div class="chat-history">
               <ul class="m-b-0">
-                <!-- all messages gone here -->
+                <!-- messages goes here -->
+                <li v-for="msg in messages" class="clearfix" v-bind:key="msg._id">
+                  <div v-bind:class="'message-data ' + (user != null && user.email == msg.sender.email ? 'text-right': '')">
+                    <span class="message-data-time text-white" v-text="getMessageTime(msg.createdAt)"></span>
+                    <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar" style="width: 50px;" />
+                  </div>
+                  <div v-bind:class="'message ' + (user != null && user.email == msg.sender.email ? 'my-message float-right' : 'other-message')">
+                  <p v-text="msg.message" v-bind:class="(user != null && user.email == msg.sender.email ? 'text-right' : '')" style="margin-bottom: 0px;"></p>
+                  </div>
+                  </li>
               </ul>
             </div>
  
@@ -60,30 +83,96 @@
         message: "",
         page: 0,
         email: this.$route.params.email,
+
+        messages: [],
+        receiver: null,
+      
+        attachment: null,
       }
     },
     methods: {
+    
+    fileSelected: function (event) {
+        const files = event.target.files
+        if(files.length > 0) {
+          this.attachment = files[0]
+        }
+    },
+
+    selectFile: function() {
+      document.getElementById("attachment").click()
+    },
+
+    getMessageTime: function (time){
+      const dateObj = new Date(time)
+      let timeStr = dateObj.getFullYear() + "-" + (
+      dateObj.getMonth() + 1) + "-" + dateObj.getDate() + " " + 
+      dateObj.getHours() + ":" + dateObj.getMinutes() + ":"
+      + dateObj.getSeconds()
+      return timeStr
+    },
+    getData: async function() {
+      if (this.email == null ) {
+        return
+      }
+
+      const formData = new FormData()
+      formData.append("email", this.email)
+      formData.append("page", this.page)
+
+      const response = await axios.post(
+        this.$apiURL + "/chat/fetch",
+        formData,
+        {
+          headers: this.$headers
+        }
+      )
+      //console.log(reponse)
+
+      if(response.data.status == "success") {
+        //
+        for (let a = 0; a < response.data.messages.length; a++) {
+          this.messages.unshift(response.data.messages[a])
+        }
+        this.receiver = response.data.receiver
+        this.user = response.data.user
+
+      } else {
+        swal.fire("Error", response.data.message, "error")
+      }
+    },
     sendMessage: async function () {
- 
-        const formData = new FormData()
-        formData.append("email", this.email)
-        formData.append("message", this.message)
- 
-        const response = await axios.post(
-            this.$apiURL + "/chat/send",
-            formData,
-            {
-                headers: this.$headers
-            }
+        
+      const formData = new FormData()
+      formData.append("email", this.email)
+      formData.append("message", this.message)
+      
+      if (this.attachment != null)
+      {
+        formData.append("attachment", this.attachment)
+      }
+
+      const response = await axios.post(
+          this.$apiURL + "/chat/send",
+          formData,
+          {
+              headers: this.$headers
+          }
         )
-        console.log(response)
+        //console.log(response)
  
         if (response.data.status == "success") {
             this.message = ""
+            this.attachment = null
+            document.getElementById("attachment").value = null
+            this.messages.push(response.data.messageObject)
         } else {
             swal.fire("Error", response.data.message, "error")
         }
     },
     },
+    mounted() {
+      this.getData()
+    }
   }
 </script>

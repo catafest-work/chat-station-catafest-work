@@ -20,10 +20,11 @@
         <tr v-for="contact in contacts" v-bind:key="contact._id">
           <td>
             <span v-text="contact.name"></span>
+            <span v-if="(contact.unreadMessages > 0)" v-text="'(' + contact.unreadMessages + ')'" class=""></span>
           </td>
           <td v-text="contact.email"></td>
           <td style="display: flex;">
-            <router-link v-bind:to="'/chat/' + contact.email" class="btn btn-primary" style="margin-left: 10px;">Chat</router-link>
+            <router-link v-bind:to="'/chat/' + contact.email" class="btn btn-primary" style="margin-right: 10px;">Chat</router-link>
             <form v-on:submit.prevent="deleteContact">
               <input type="hidden" name="email" v-bind:value="contact.email" />
               <input type="submit" v-bind:value="isDeleting ? 'Deleting...' : 'Delete'" v-bind:isDeleting="disabled" class="btn btn-danger" />
