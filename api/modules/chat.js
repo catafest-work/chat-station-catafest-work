@@ -67,8 +67,8 @@ module.exports = {
     const self = this; 
     const router = express.Router();
 
-    router.post("/attachment", auth, async function() {
-      
+    router.post("/attachment", auth, async function(request, result) {
+      const
     })
 
     router.post("/fetch", auth, async function (request, result) {
