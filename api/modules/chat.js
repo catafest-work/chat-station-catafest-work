@@ -68,8 +68,39 @@ module.exports = {
     const router = express.Router();
 
     router.post("/attachment", auth, async function(request, result) {
-      const
-    })
+      const messageId = request.fields.messageId;
+      const user = request.user;
+      const message = await db.collection("messages").findOne({
+        _id: ObjectId(messageId)
+      });
+    if(message == null)
+    {
+      result.status(404).json({
+        status: "error",
+        message: "Message not found."
+      });
+      return;
+    }
+
+    const isSender = (message.sender._id = user._id.toString());
+    const isReceiver = (message.receiver._id = user._id.toString());
+
+    if(!(isSender || isReceiver)) {
+      result.status(401).json({
+        status: "error",
+        message: "You are not authorized for viewing this attachment."
+      });
+      return;
+    }
+    let attachment = message.attachment;
+    const base64Str = "data:" + attachment.type + ";base64," + base64Encoded(attachment.path);
+    result.json({
+      status: "success",
+      message: "Attachment has been fetched",
+      base64Str: base64Str,
+      fileName: attachment.displayName
+      })
+    }),
 
     router.post("/fetch", auth, async function (request, result) {
       const user = request.user;
