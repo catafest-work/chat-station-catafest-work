@@ -9,6 +9,8 @@ var ObjectId = mongodb.ObjectId;
 
 const auth = require("./auth");
 
+require("./globals");
+
 const fileSystem = require("fs")
 
 const crypto = require("crypto");
@@ -48,64 +50,87 @@ let decrypt = function(text) {
   return decryptedData;
 };
 
+// function to encode file data to base64 encoded string
+
+let base64Encoded = function (file) {
+  // read binary data
+  var bitmap = fileSystem.readFileSync(file);
+  // convert binary data to base64 encoded string
+  return new Buffer.from(bitmap).toString('base64');
+
+};
+
+
 module.exports = {
 
   init: function (app, express)  {
-  const self = this; 
-  const router = express.Router();
+    const self = this; 
+    const router = express.Router();
 
-  router.post("/fetch", auth, async function (request, result) {
-    const user = request.user;
-    const email = request.fields.email;
-    const page = request.fields.page ?? 0;
-    const limit = 30;
+    router.post("/attachment", auth, async function() {
+      
+    })
 
-    if(!email) {
-      result.json({
-        status: "error",
-        message: "Please enter all fields."
-      });
-      return;
-    }
-    const receiver = await db.collection("users").
-      findOne({
-        email: email
-      });
-    if(receiver == null) {
-      result.json({
-        status: "error",
-        message: "The receiver is not a member of Chat Station."
-      });
-      return;
-    }
-    const messages = await db.collection("messages").
-      find({
-        $or: [{
-          "sender._id": user._id,
-          "receiver._id": receiver._id
-        },{
-          "sender._id": receiver._id,
-          "receiver._id": user._id
-        }]
-      })
-      .sort("createdAt", -1).skip(page * limit).limit(limit).toArray();
+    router.post("/fetch", auth, async function (request, result) {
+      const user = request.user;
+      const email = request.fields.email;
+      const page = request.fields.page ?? 0;
+      const limit = 30;
+
+      if(!email) {
+        result.json({
+          status: "error",
+          message: "Please enter all fields."
+        });
+        return;
+      }
+      const receiver = await db.collection("users").
+        findOne({
+          email: email
+        });
+      if(receiver == null) {
+        result.json({
+          status: "error",
+          message: "The receiver is not a member of Chat Station."
+        });
+        return;
+      }
+      const messages = await db.collection("messages").
+        find({
+          $or: [{
+            "sender._id": user._id,
+            "receiver._id": receiver._id
+          },{
+            "sender._id": receiver._id,
+            "receiver._id": user._id
+          }]
+        })
+        .sort("createdAt", -1).skip(page * limit).limit(limit).toArray();
 
       const data = [];
       for (let a = 0; a < messages.length; a++) {
-          data.push({
-              _id: messages[a]._id.toString(),
-              message: decrypt(messages[a].message),
-              sender: {
-                  email: messages[a].sender.email,
-                  name: messages[a].sender.name
-              },
-              receiver: {
-                  email: messages[a].receiver.email,
-                  name: messages[a].receiver.name
-              }, 
-              isRead: messages[a].isRead,
-              createdAt: messages[a].createdAt
-          });
+        
+        let attachment = null;
+        if (messages[a].attachment != null) {
+          attachment = messages[a].attachment;
+          attachment.path = baseURL + "/chat/attachment" + messages[a]._id;
+        }
+      
+        data.push({
+            _id: messages[a]._id.toString(),
+            message: decrypt(messages[a].message),
+            sender: {
+                email: messages[a].sender.email,
+                name: messages[a].sender.name
+            },
+            receiver: {
+                email: messages[a].receiver.email,
+                name: messages[a].receiver.name
+            }, 
+            isRead: messages[a].isRead,
+            attachment: attachment,
+            createdAt: messages[a].createdAt
+        });
       } 
 
       let unreadMessages = 0;

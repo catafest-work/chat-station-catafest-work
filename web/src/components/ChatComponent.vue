@@ -46,6 +46,9 @@
                   </div>
                   <div v-bind:class="'message ' + (user != null && user.email == msg.sender.email ? 'my-message float-right' : 'other-message')">
                   <p v-text="msg.message" v-bind:class="(user != null && user.email == msg.sender.email ? 'text-right' : '')" style="margin-bottom: 0px;"></p>
+                  <template v-if="msg.attachment != null">
+                  <a href="javascript:void(0)" v-bind:data-id="msg._id" v-on:click.prevent="downloadAttachment" v-text="msg.attachment.displayName" class="text-info" target="_blank" ></a>
+                  </template>
                   </div>
                   </li>
               </ul>
@@ -66,7 +69,10 @@
         </div>
       </div>
     </div>
+  <a v-bind:href="base64Str" ref="btnDownloadAttachment" v-bind:download="downloadFileName"></a>
+  <!-- err : template require one element  -->
   </div>
+
 </template>
  
 <script>
@@ -88,21 +94,48 @@
         receiver: null,
       
         attachment: null,
+        base64Str: "",
+        downloadFileName: ""
       }
     },
     methods: {
-    
+    downloadAttachment: async function(event) {
+      const anchor = event.target
+      const id = anchor.getAttribute("data-id")
+      const originalHtml = anchor.innerHTML
+      anchor.innerHTML = "Loading..."
+
+      const formData = new FormData()
+      formData.append("messageId", id)
+
+      const response = await axios.post(
+        this.$apiURL + "/chat/attachment",
+        formData,
+        {
+          headers: this.$headers
+        }
+      )
+      if(response.data.status == "success") {
+        this.base64Str = response.data.base64Str
+        this.downloadFileName = response.data.fileName
+        
+        const btnDownloadAttachment = this.$refs["btnDownloadAttachment"]
+        setTimeout(function() {
+          btnDownloadAttachment.click()
+          anchor.innerHTML = originalHtml}, 500)
+          } else {
+            swal.fire("Error", response.data.message, "error")
+          }
+    },
     fileSelected: function (event) {
         const files = event.target.files
         if(files.length > 0) {
           this.attachment = files[0]
         }
     },
-
     selectFile: function() {
       document.getElementById("attachment").click()
     },
-
     getMessageTime: function (time){
       const dateObj = new Date(time)
       let timeStr = dateObj.getFullYear() + "-" + (
